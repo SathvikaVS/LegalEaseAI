@@ -20,6 +20,18 @@ load_dotenv(ROOT_DIR / ".env")
 
 
 # ============================================================
+# PAGE CONFIG
+# ============================================================
+
+st.set_page_config(
+    page_title="LegalEase",
+    page_icon="⚖️",
+    layout="centered",
+    initial_sidebar_state="collapsed",
+)
+
+
+# ============================================================
 # CONFIGURATION
 # ============================================================
 
@@ -34,6 +46,22 @@ GEMINI_MODEL = os.getenv(
 )
 
 CSS_FILE = ROOT_DIR / "frontend" / "static" / "style.css"
+
+
+# ============================================================
+# LOAD CSS
+# ============================================================
+
+if CSS_FILE.exists():
+
+    css = CSS_FILE.read_text(
+        encoding="utf-8"
+    )
+
+    st.markdown(
+        f"<style>{css}</style>",
+        unsafe_allow_html=True
+    )
 
 
 # ============================================================
@@ -60,34 +88,6 @@ except ImportError:
 
     def format_pdf(text, *args, **kwargs):
         return text.encode("utf-8")
-
-
-# ============================================================
-# PAGE CONFIG
-# ============================================================
-
-st.set_page_config(
-    page_title="LegalEase",
-    page_icon="⚖️",
-    layout="centered",
-    initial_sidebar_state="collapsed",
-)
-
-
-# ============================================================
-# LOAD CSS
-# ============================================================
-
-if CSS_FILE.exists():
-
-    css = CSS_FILE.read_text(
-        encoding="utf-8"
-    )
-
-    st.markdown(
-        f"<style>{css}</style>",
-        unsafe_allow_html=True
-    )
 
 
 # ============================================================
@@ -148,6 +148,10 @@ def generate_document(
         timeout=180,
     )
 
+    # --------------------------------------------------------
+    # BACKEND ERROR
+    # --------------------------------------------------------
+
     if response.status_code >= 400:
 
         try:
@@ -171,6 +175,10 @@ def generate_document(
             f"{response.status_code}: {detail}"
         )
 
+    # --------------------------------------------------------
+    # RESPONSE
+    # --------------------------------------------------------
+
     data = response.json()
 
     if data.get("status") != "success":
@@ -186,7 +194,7 @@ def generate_document(
 
 
 # ============================================================
-# DOCX
+# DOCX CREATION
 # ============================================================
 
 def create_docx(text):
@@ -212,7 +220,7 @@ def create_docx(text):
 
 
 # ============================================================
-# PDF
+# PDF CREATION
 # ============================================================
 
 def create_pdf(text):
@@ -272,32 +280,6 @@ st.markdown(
 
 
 # ============================================================
-# AI STATUS
-# ============================================================
-
-if backend_online:
-
-    st.markdown(
-        '<div class="status-online">'
-        '<span class="status-dot"></span>'
-        f'<span>{model_name}</span>'
-        '<span class="status-muted">Online</span>'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-else:
-
-    st.markdown(
-        '<div class="status-offline">'
-        '<span class="status-dot"></span>'
-        '<span>Backend Offline</span>'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-
-# ============================================================
 # CREATE DOCUMENT
 # ============================================================
 
@@ -313,11 +295,19 @@ st.markdown(
 )
 
 
+# ============================================================
+# DOCUMENT TYPE
+# ============================================================
+
 document_type = st.text_input(
     "Document Type / Title",
     placeholder="e.g. Employment Contract",
 )
 
+
+# ============================================================
+# PARTIES
+# ============================================================
 
 parties = st.text_area(
     "Parties Involved",
@@ -325,9 +315,13 @@ parties = st.text_area(
         "Party A: ABC Technologies Pvt. Ltd. (Employer)\n"
         "Party B: Priya Sharma (Employee)"
     ),
-    height=100,
+    height=85,
 )
 
+
+# ============================================================
+# TERMS
+# ============================================================
 
 terms = st.text_area(
     "Key Terms & Specific Clauses",
@@ -337,9 +331,13 @@ terms = st.text_area(
         "Notice period: 30 days\n"
         "Confidentiality required"
     ),
-    height=135,
+    height=115,
 )
 
+
+# ============================================================
+# EFFECTIVE DATE
+# ============================================================
 
 effective_date = st.text_input(
     "Effective Date & Jurisdiction",
@@ -358,7 +356,15 @@ generate_clicked = st.button(
 )
 
 
+# ============================================================
+# GENERATE DOCUMENT FLOW
+# ============================================================
+
 if generate_clicked:
+
+    # --------------------------------------------------------
+    # BACKEND CHECK
+    # --------------------------------------------------------
 
     if not backend_online:
 
@@ -367,11 +373,19 @@ if generate_clicked:
             "Start the LegalEase API first."
         )
 
+    # --------------------------------------------------------
+    # DOCUMENT TYPE VALIDATION
+    # --------------------------------------------------------
+
     elif not document_type.strip():
 
         st.error(
             "Please enter the document type."
         )
+
+    # --------------------------------------------------------
+    # PARTIES VALIDATION
+    # --------------------------------------------------------
 
     elif not parties.strip():
 
@@ -379,11 +393,19 @@ if generate_clicked:
             "Please enter the parties involved."
         )
 
+    # --------------------------------------------------------
+    # TERMS VALIDATION
+    # --------------------------------------------------------
+
     elif not terms.strip():
 
         st.error(
             "Please enter the key terms."
         )
+
+    # --------------------------------------------------------
+    # DATE VALIDATION
+    # --------------------------------------------------------
 
     elif not effective_date.strip():
 
@@ -392,11 +414,14 @@ if generate_clicked:
             "and jurisdiction."
         )
 
+    # --------------------------------------------------------
+    # GENERATE
+    # --------------------------------------------------------
+
     else:
 
         with st.spinner(
-            f"Creating your document with "
-            f"{model_name}..."
+            "Creating your legal document..."
         ):
 
             try:
@@ -408,15 +433,19 @@ if generate_clicked:
                     effective_date=effective_date.strip(),
                 )
 
+                # ------------------------------------------------
+                # EMPTY RESPONSE CHECK
+                # ------------------------------------------------
+
                 if not generated:
 
                     raise RuntimeError(
-                        "Gemini returned an empty document."
+                        "The AI returned an empty document."
                     )
 
-                # ---------------------------------------------
-                # Clean generated document
-                # ---------------------------------------------
+                # ------------------------------------------------
+                # FORMAT GENERATED DOCUMENT
+                # ------------------------------------------------
 
                 try:
 
@@ -428,6 +457,10 @@ if generate_clicked:
 
                     pass
 
+                # ------------------------------------------------
+                # SANITIZE GENERATED DOCUMENT
+                # ------------------------------------------------
+
                 try:
 
                     generated = sanitize_text(
@@ -438,24 +471,25 @@ if generate_clicked:
 
                     pass
 
-                # ---------------------------------------------
-                # Store document
-                # ---------------------------------------------
+                # ------------------------------------------------
+                # STORE DOCUMENT
+                # ------------------------------------------------
 
                 st.session_state.generated_text = generated
 
-                # IMPORTANT:
-                # Do NOT create/change the document_editor
-                # widget state here.
-                #
-                # Edit mode will initialize its own widget
-                # from generated_text.
-
                 st.session_state.edit_mode = False
+
+                # ------------------------------------------------
+                # SUCCESS MESSAGE
+                # ------------------------------------------------
 
                 st.success(
                     "Legal document generated successfully."
                 )
+
+            # ----------------------------------------------------
+            # TIMEOUT
+            # ----------------------------------------------------
 
             except requests.exceptions.Timeout:
 
@@ -464,12 +498,20 @@ if generate_clicked:
                     "Please try again."
                 )
 
+            # ----------------------------------------------------
+            # CONNECTION ERROR
+            # ----------------------------------------------------
+
             except requests.exceptions.ConnectionError:
 
                 st.error(
                     "Cannot connect to the LegalEase backend. "
                     "Make sure FastAPI is running."
                 )
+
+            # ----------------------------------------------------
+            # OTHER ERROR
+            # ----------------------------------------------------
 
             except Exception as error:
 
@@ -484,16 +526,26 @@ if generate_clicked:
 
 if st.session_state.generated_text:
 
+    # ========================================================
+    # DIVIDER
+    # ========================================================
+
     st.markdown(
         '<div class="document-section"></div>',
         unsafe_allow_html=True
     )
 
+    # ========================================================
+    # DOCUMENT HEADER
+    # ========================================================
+
     st.markdown(
         '<div class="document-heading">'
         '<div>'
         '<h2>Generated Document</h2>'
-        '<p>Review and customize your AI-generated draft.</p>'
+        '<p>'
+        'Review and customize your AI-generated draft.'
+        '</p>'
         '</div>'
         '<div class="document-badge">AI DRAFT</div>'
         '</div>',
@@ -507,26 +559,18 @@ if st.session_state.generated_text:
 
     if st.session_state.edit_mode:
 
-        # ----------------------------------------------------
-        # IMPORTANT FIX
-        #
-        # Do not use:
-        # value=st.session_state.document_editor
-        #
-        # and then modify document_editor after the widget
-        # is created.
-        #
-        # Instead, use a temporary widget key.
-        # ----------------------------------------------------
-
         edited_document = st.text_area(
             "Edit Document",
             value=st.session_state.generated_text,
-            height=620,
+            height=580,
             label_visibility="collapsed",
             key="document_editor_widget",
         )
 
+
+        # ----------------------------------------------------
+        # EDIT ACTION BUTTONS
+        # ----------------------------------------------------
 
         edit_col1, edit_col2 = st.columns(2)
 
@@ -549,28 +593,24 @@ if st.session_state.generated_text:
 
 
         # ----------------------------------------------------
-        # SAVE
+        # SAVE CHANGES
         # ----------------------------------------------------
 
         if save_clicked:
 
-            # Save the edited content as the actual document.
             st.session_state.generated_text = edited_document
 
-            # Leave edit mode.
             st.session_state.edit_mode = False
 
             st.rerun()
 
 
         # ----------------------------------------------------
-        # CANCEL
+        # CANCEL EDITING
         # ----------------------------------------------------
 
         if cancel_clicked:
 
-            # Do NOT modify the text-area widget state.
-            # Simply leave edit mode.
             st.session_state.edit_mode = False
 
             st.rerun()
@@ -598,11 +638,15 @@ if st.session_state.generated_text:
 
 
         # ====================================================
-        # DOCUMENT ACTIONS
+        # DOCUMENT ACTION BUTTONS
         # ====================================================
 
         action_col1, action_col2 = st.columns(2)
 
+
+        # ----------------------------------------------------
+        # EDIT BUTTON
+        # ----------------------------------------------------
 
         with action_col1:
 
@@ -612,6 +656,10 @@ if st.session_state.generated_text:
             )
 
 
+        # ----------------------------------------------------
+        # NEW DOCUMENT BUTTON
+        # ----------------------------------------------------
+
         with action_col2:
 
             new_clicked = st.button(
@@ -620,9 +668,9 @@ if st.session_state.generated_text:
             )
 
 
-        # ----------------------------------------------------
+        # ====================================================
         # EDIT DOCUMENT
-        # ----------------------------------------------------
+        # ====================================================
 
         if edit_clicked:
 
@@ -631,9 +679,9 @@ if st.session_state.generated_text:
             st.rerun()
 
 
-        # ----------------------------------------------------
+        # ====================================================
         # NEW DOCUMENT
-        # ----------------------------------------------------
+        # ====================================================
 
         if new_clicked:
 
@@ -645,7 +693,7 @@ if st.session_state.generated_text:
 
 
         # ====================================================
-        # EXPORT
+        # EXPORT DOCUMENT
         # ====================================================
 
         st.markdown(
@@ -758,7 +806,6 @@ if st.session_state.generated_text:
 st.markdown(
     '<div class="footer">'
     'LegalEase &nbsp;•&nbsp; AI-assisted legal drafting'
-    f'&nbsp;•&nbsp; {model_name}'
     '</div>',
     unsafe_allow_html=True
 )
