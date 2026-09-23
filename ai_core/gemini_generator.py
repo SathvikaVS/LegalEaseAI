@@ -156,10 +156,9 @@ legally valid or enforceable.
 
 16. Do not provide legal advice outside the document.
 
-17. Keep the document reasonably concise while still being complete.
+17. Keep the document concise, brief, and directly to the point.
 
-18. Prefer approximately 700–1200 words unless the requested document
-genuinely requires more detail.
+18. Prefer approximately 300–500 words while maintaining core legal validity.
 
 ============================================================
 LEGAL SAFETY NOTICE
