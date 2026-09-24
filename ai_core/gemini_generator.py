@@ -36,7 +36,7 @@ class GeminiDocumentGenerator:
             "GEMINI_MODEL",
             "gemini-3.6-flash"
         )
-
+        print(f"[LegalEase] GEMINI_MODEL loaded as: {self.model_name}")
         # ---------------------------------------------------------
         # Create Gemini client
         # ---------------------------------------------------------
