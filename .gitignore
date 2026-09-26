@@ -22,3 +22,9 @@ env/
 # OS files
 .DS_Store
 Thumbs.db
+# Demo video - submit via Google Drive
+project_phases/08_Project_Demonstration/*.mp4
+
+# Python cache
+__pycache__/
+*.pyc
